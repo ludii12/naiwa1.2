@@ -1,0 +1,13 @@
+{
+  "name": "naiwa-app",
+  "version": "1.0.0",
+  "description": "奶娃 - 视频+跑酷游戏",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "dev": "echo 'Dev server would start here'"
+  },
+  "keywords": ["capacitor", "android", "game"],
+  "author": "",
+  "license": "MIT"
+}
