@@ -576,13 +576,13 @@ body::before {
         <canvas class="game-canvas" id="gameCanvas"></canvas>
         
         <div class="frog-character-container" id="frogCharacterContainer">
-          <video class="frog-character-video" id="frogRunVideo" loop muted playsinline>
+          <video class="frog-character-video" id="frogRunVideo" loop muted playsinline preload="auto">
             <source src="https://pan.imgbed.link/file/370915" type="video/mp4">
           </video>
-          <video class="frog-character-video" id="frogJumpVideo" loop muted playsinline style="display: none;">
+          <video class="frog-character-video" id="frogJumpVideo" loop muted playsinline preload="auto" style="display: none;">
             <source src="https://pan.imgbed.link/file/370918" type="video/mp4">
           </video>
-          <video class="frog-character-video" id="frogFallVideo" muted playsinline style="display: none;">
+          <video class="frog-character-video" id="frogFallVideo" muted playsinline preload="auto" style="display: none;">
             <source src="https://pan.imgbed.link/file/370917" type="video/mp4">
           </video>
         </div>
@@ -799,7 +799,7 @@ function initGame() {
   
   if (frogRunVideo) {
     frogRunVideo.currentTime = 0;
-    frogRunVideo.play().catch(() => {});
+    playVideoSafely(frogRunVideo);
   }
 }
 
@@ -881,6 +881,21 @@ function resizeGameCanvas() {
 
 let lastState = 'running';
 
+function playVideoSafely(videoElement) {
+  if (!videoElement) return;
+  
+  const playPromise = videoElement.play();
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      videoElement.dataset.playError = 'false';
+    }).catch(error => {
+      videoElement.dataset.playError = 'true';
+      videoElement.muted = true;
+      videoElement.play().catch(() => {});
+    });
+  }
+}
+
 function updateFrogPosition() {
   let scaleX = 1;
   let scaleY = 1;
@@ -902,7 +917,6 @@ function updateFrogPosition() {
     currentState = 'falling';
     frog.fallFrame++;
     
-    // 摔跤时保持平稳，不抖动
     scaleX = 1;
     scaleY = 1;
     rotation = 0;
@@ -914,7 +928,7 @@ function updateFrogPosition() {
       if (fallVideo) {
         fallVideo.style.display = 'block';
         fallVideo.currentTime = 0;
-        fallVideo.play().catch(() => {});
+        playVideoSafely(fallVideo);
         
         fallVideo.onended = () => {
           endGameWithFall();
@@ -939,7 +953,6 @@ function updateFrogPosition() {
     scaleY = 1 + (scaleY - 1) * jumpProgress;
     rotation = rotation * jumpProgress;
   } else {
-    // 跑步时添加轻微的上下抖动
     frog.frameCount++;
     const runSpeed = gameSpeed * 0.15;
     const bounceCycle = frog.frameCount * runSpeed;
@@ -950,7 +963,7 @@ function updateFrogPosition() {
     rotation = 0;
   }
   
-  if (currentState !== lastState && currentState !== 'falling') {
+  if (currentState !== lastState) {
     const runVideo = document.getElementById('frogRunVideo');
     const jumpVideo = document.getElementById('frogJumpVideo');
     const fallVideo = document.getElementById('frogFallVideo');
@@ -960,11 +973,23 @@ function updateFrogPosition() {
       fallVideo.style.display = 'none';
       jumpVideo.style.display = 'block';
       jumpVideo.currentTime = 0;
-      jumpVideo.play().catch(() => {});
+      playVideoSafely(jumpVideo);
     } else if (currentState === 'running' || currentState === 'laughing') {
       jumpVideo.style.display = 'none';
       fallVideo.style.display = 'none';
       runVideo.style.display = 'block';
+      
+      if (currentState === 'running' && gameRunning) {
+        if (runVideo.readyState >= 3) {
+          playVideoSafely(runVideo);
+        }
+        runVideo.addEventListener('canplay', function onCanPlay() {
+          if (currentState === 'running' && gameRunning) {
+            playVideoSafely(runVideo);
+          }
+          runVideo.removeEventListener('canplay', onCanPlay);
+        });
+      }
     }
     
     lastState = currentState;
@@ -1159,7 +1184,7 @@ function updateGameScore() {
       if (frogRunVideo) {
         frogRunVideo.src = VIDEO_LIST[0].video;
         frogRunVideo.currentTime = 0;
-        frogRunVideo.play().catch(() => {});
+        playVideoSafely(frogRunVideo);
       }
     }
     
@@ -1271,7 +1296,7 @@ function startGame() {
   if (runVideo) {
     runVideo.style.display = 'block';
     runVideo.currentTime = 0;
-    runVideo.play().catch(() => {});
+    playVideoSafely(runVideo);
   }
   
   if (jumpVideo) {
