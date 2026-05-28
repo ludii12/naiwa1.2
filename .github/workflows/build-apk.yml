@@ -16,9 +16,9 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
     
-    - name: Install dependencies
+    - name: Install npm dependencies
       run: npm install
     
     - name: Setup Java JDK
@@ -29,9 +29,20 @@ jobs:
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
+      with:
+        api-level: 34
+        build-tools: 34.0.0
+        ndk: 25.2.9519653
+        cmake: 3.22.1
     
-    - name: Install Capacitor
-      run: npm install @capacitor/core @capacitor/cli @capacitor/android
+    - name: Install Capacitor CLI
+      run: npm install -g @capacitor/cli
+    
+    - name: Install Capacitor packages
+      run: npm install @capacitor/core @capacitor/android
+    
+    - name: Build web app
+      run: npm run build
     
     - name: Initialize Capacitor
       run: npx cap init "奶娃" "com.naiwa.frog" --web-dir=dist
@@ -39,33 +50,19 @@ jobs:
     - name: Add Android platform
       run: npx cap add android
     
-    - name: Build web app
-      run: npm run build
-    
-    - name: Sync to Android
+    - name: Sync Capacitor
       run: npx cap sync android
     
-    - name: Build debug APK
+    - name: Build Android APK
       run: |
         cd android
-        chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
       env:
-        JAVA_HOME: /opt/java/openjdk
-        ANDROID_HOME: /opt/android-sdk
+        JAVA_HOME: ${{ env.JAVA_HOME }}
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
     
-    - name: Upload APK
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: apk
+        name: naiwa-app-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
-    
-    - name: Upload to GitHub Releases
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: android/app/build/outputs/apk/debug/app-debug.apk
-        name: Latest APK
-        tag_name: apk-release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
