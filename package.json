@@ -4,8 +4,7 @@
   "description": "奶娃 - 视频+跑酷游戏",
   "main": "index.html",
   "scripts": {
-    "build": "echo 'Build complete'",
-    "dev": "echo 'Dev server would start here'"
+    "build": "mkdir -p dist && cp index.html dist/ && cp -r public dist/ 2>/dev/null || true"
   },
   "keywords": ["capacitor", "android", "game"],
   "author": "",
