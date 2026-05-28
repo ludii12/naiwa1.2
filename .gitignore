@@ -6,13 +6,7 @@ dist/
 build/
 
 # Android (will be built by GitHub Actions)
-# android/
-# !android/app/build.gradle
-# !android/build.gradle
-# !android/gradle.properties
-# !android/gradle/
-# !android/app/src/
-# !android/app/build/
+android/
 
 # Logs
 *.log
